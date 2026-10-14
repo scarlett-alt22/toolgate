@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "toolgate"
+version = "0.1.0"
+description = "Watch and pin the tool definitions your agent advertises on the wire."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { file = "LICENSE" }
+keywords = ["llm", "agent", "security", "tool-calling", "supply-chain"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Topic :: Security",
+]
+# 🔴 Zero dependencies, on purpose. A security tool's dependency surface is its attack surface,
+#    and the whole reason this exists is "something you assumed had not changed, changed".
+dependencies = []
+
+[project.scripts]
+toolgate = "toolgate.cli:main"
+
+[tool.setuptools]
+packages = ["toolgate"]
+py-modules = ["inspector"]

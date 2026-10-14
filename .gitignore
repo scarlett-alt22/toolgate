@@ -1,0 +1,19 @@
+# Build artifacts: regenerated every run; they embed this machine's absolute paths and random uuids
+runs/
+__pycache__/
+*.pyc
+
+# Working directories the example profile points at (created when tests run)
+workspace/
+example-home/
+
+# Generated on the spot by tools/make-example-profile.py (contains this machine's absolute paths)
+profiles/example-loopback.json
+profiles/manifest.json
+
+# 🔴 Real trace fixtures: they contain the real environment's **complete tool inventory**
+#    (including which MCP integrations are installed and the names of self-hosted
+#    services) — that's personal information, it doesn't go into version control.
+#    Record your own: python3 tools/capture_real_trace.py --client claude --runs 4 \
+#              --out tests/fixtures/real-claude-code/<id>
+tests/fixtures/real-claude-code/

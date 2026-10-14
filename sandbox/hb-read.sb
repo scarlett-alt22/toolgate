@@ -1,0 +1,147 @@
+; hb-read.sb — Seatbelt profile for read-only headless heartbeat attempts
+;
+; Lineage: modelled on the seatbelt_base_policy.sbpl shipped with the Codex CLI (itself descended from Chrome's
+; sandbox/policy/mac/common.sb). What was borrowed is the "closed by default + read-only system allowlist" skeleton,
+; not a copy: the Codex profile allows reading the whole disk by default (allow file-read*); this one does not.
+;
+; The four properties this profile must demonstrate (mapped to the six A12 cells):
+;   ① the specified input is readable        ② out-of-bounds paths are not readable
+;   ③ input/HOME/tmp/cache are all unwritable
+;   ④ only this run's exact inspector loopback port is reachable; other loopback ports, the internet and DNS are all unreachable
+;
+; Parameters (all passed explicitly by the launcher; the profile has no defaults):
+;   INSPECTOR_PORT — this run's inspector port, as a string
+;   READ_ROOT      — the input root this run may read (sentinel + task input)
+;   CLI_ROOT       — Claude Code install directory
+;   HOME_DIR       — this run's dedicated HOME (read-only; the keychain bridge sits under it)
+;   ATTEMPT_TMP    — this run's TMPDIR (read-only by default; see the WRITE section at the end of the file)
+;   WORKSPACE      — the CLI's cwd. Required: a process whose getcwd cannot read its own working directory
+;                    fails to start with EPERM (measured; see the notes on those two rules in §3)
+;   SNAPSHOT_DIR   — this run's snapshot/ (settings.json + mcp.json). The CLI has to read its own config.
+;                    ⚠️ It gets snapshot/, not the whole attempt_dir — attempt_dir also holds
+;                    inspector.jsonl / terminal.json / events.jsonl, which are **the observer's
+;                    artefacts**; the observed party must not be able to read them.
+;
+; ⚠️ The sandbox-exec man page marks it DEPRECATED. Using it means treating "re-run this regression set after a macOS / Claude CLI
+;    upgrade" as a standing production gate, not a one-off acceptance.
+
+(version 1)
+
+; ── 0. Close the door ─────────────────────────────────────────────────────
+(deny default)
+
+; ── 1. Processes ──────────────────────────────────────────────────────────
+; Child processes inherit this policy. The CLI forks.
+(allow process-exec)
+(allow process-fork)
+(allow signal (target same-sandbox))
+(allow process-info* (target same-sandbox))
+
+; ── 2. Read-only system surface ───────────────────────────────────────────
+; Without this section even /bin/cat SIGABRTs (dyld cannot read /usr/lib) —
+; and that failure has exactly the same exit code as "blocked by the sandbox", so every cell needs a positive arm.
+(allow sysctl-read)
+(allow file-read-metadata)
+
+(allow file-read* file-test-existence
+  (subpath "/usr/lib")
+  (subpath "/usr/share")
+  (subpath "/System")
+  (subpath "/Library/Apple")
+  (subpath "/Library/Developer/CommandLineTools")
+  (subpath "/Library/Preferences/Logging")
+  (subpath "/private/var/db/timezone")
+  (subpath "/private/var/db/DarwinDirectory")
+  (literal "/")
+  (literal "/etc")
+  (literal "/tmp")
+  (literal "/var")
+  (literal "/private/etc/localtime")
+  (literal "/dev/null")
+  (literal "/dev/zero")
+  (literal "/dev/random")
+  (literal "/dev/urandom"))
+
+(allow file-map-executable
+  (subpath "/usr/lib")
+  (subpath "/System/Library/Frameworks")
+  (subpath "/System/Library/PrivateFrameworks")
+  (subpath "/System/Library/SubFrameworks")
+  (subpath "/Library/Apple/usr/lib")
+  (subpath "/Library/Apple/System/Library/Frameworks")
+  (subpath "/Library/Apple/System/Library/PrivateFrameworks")
+  (subpath "/Library/Developer/CommandLineTools"))
+
+(allow file-read* file-map-executable
+  (subpath "/bin")
+  (subpath "/usr/bin"))
+
+; Resolve the parent path components of firmlinks (otherwise paths under /System/Volumes/Data cannot be stat'ed)
+(allow file-read-metadata file-test-existence
+  (path-ancestors "/System/Volumes/Data/private"))
+
+; Read-only user preferences (the CLI reads locale and the like at startup)
+(allow ipc-posix-shm-read* (ipc-posix-name-prefix "apple.cfprefs."))
+(allow user-preference-read)
+
+; openpty / tty: the CLI probes whether it is a terminal
+(allow pseudo-tty)
+(allow file-read* file-write* file-ioctl (literal "/dev/ptmx"))
+(allow file-ioctl (regex #"^/dev/ttys[0-9]+"))
+(allow file-read* file-write*
+  (require-all (regex #"^/dev/ttys[0-9]+") (extension "com.apple.sandbox.pty")))
+
+; ── 3. This run's read surface (cells ① / ②) ─────────────────────────────
+; These rules are the entire "specified input". Any path not listed here gets EPERM.
+(allow file-read* file-test-existence
+  (subpath (param "READ_ROOT"))
+  (subpath (param "CLI_ROOT"))
+  (subpath (param "HOME_DIR"))
+  (subpath (param "ATTEMPT_TMP"))
+  (subpath (param "WORKSPACE"))
+  (subpath (param "SNAPSHOT_DIR")))
+
+(allow file-map-executable
+  (subpath (param "CLI_ROOT")))
+
+; ★ These two rules were forced by measurement, not copied from documentation. Under a zero-write profile Claude Code failed to start with
+;   `error: An internal error occurred (EPERM)`; the write surface was suspected first,
+;   but **even a fully open (allow file-write*) did not fix it** — it was the read surface.
+;   The kernel log (log show, predicate matching Sandbox deny) gave the exact three:
+;     deny file-read-data /dev/dtracehelper        ← probed by the bun runtime at startup
+;     deny file-read-data <cwd>                    ← the process's getcwd
+;     deny file-read-data <parent of cwd>
+;   With them added, `claude --version` returns rc=0 inside the sandbox, **and the write surface is still zero**.
+;   ⚠️ Don't write the criterion as "adding them fixed it": a new CLI version may need something else, so G6 is a standing regression cell.
+(allow file-read* file-test-existence
+  (literal "/dev/dtracehelper"))
+
+; The CLI's runtime/IPC directory. Hard-coded under /tmp and it **ignores TMPDIR** (measured: with TMPDIR already
+; pointing at the attempt's own directory, it still opened /tmp/claude-501).
+; Passed in by the launcher as CLI_RUNTIME_DIR so it follows the uid instead of hard-coding 501.
+(allow file-read* file-test-existence
+  (subpath (param "CLI_RUNTIME_DIR")))
+
+; ── 4. Write surface (cell ③) ────────────────────────────────────────────
+; 🔴 Only /dev/null. Input, HOME, tmp and cache are all unwritable — this is the cell the spec requires.
+; If the CLI cannot start, the right move is to **loosen it here and write down why**,
+; not to change the test into "a failed write also counts as a pass".
+(allow file-write-data
+  (require-all (path "/dev/null") (vnode-type CHARACTER-DEVICE)))
+
+; ── 5. Network (cells ④ / ⑤) ─────────────────────────────────────────────
+; ★ Exact to the port, not "all of loopback allowed". Measured: both on 127.0.0.1,
+;   this run's port connects and another port gets EPERM.
+;
+; Why DNS is also unreachable (located by measurement, not by reasoning):
+;   the control is the **non-IP side** of network-outbound (mDNSResponder goes over a unix socket),
+;   not mach-lookup. Bisection evidence:
+;     (allow mach-lookup) + (allow file-read*)          → still gaierror
+;     (allow network*)                                   → RESOLVED
+;     (allow network-outbound (remote ip "*:*"))         → still gaierror (covers IP sockets only)
+;   This profile lists only one remote ip under network-outbound; the unix-socket side was never allowed,
+;   so name resolution is unreachable.
+;   ⚠️ Which means: **if anyone changes this to an (allow network-outbound) without a remote qualifier,
+;      DNS works immediately** — G5.dns guards exactly that.
+(allow network-outbound
+  (remote ip (string-append "localhost:" (param "INSPECTOR_PORT"))))

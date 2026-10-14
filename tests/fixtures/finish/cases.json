@@ -1,0 +1,76 @@
+[
+ {
+  "id": "baseline",
+  "label": "positive arm as-is",
+  "variable": "none",
+  "expected_outcome": "success",
+  "expected_exit": 0,
+  "mutation": {"op": "none"}
+ },
+ {
+  "id": "scan_outcome_failed",
+  "label": "scan outcome=failed",
+  "variable": "response_scan_outcome",
+  "expected_outcome": "inspector_failed",
+  "expected_exit": 80,
+  "mutation": {
+   "op": "set_fields",
+   "selector": {
+    "event": "response_scan_terminal",
+    "request_id": "37fb8ead-1477-4c2d-a6d6-03faaf83632f"
+   },
+   "changes": {
+    "outcome": {"from": "ok", "to": "failed"}
+   }
+  }
+ },
+ {
+  "id": "truncated_stream",
+  "label": "has tool_use but the stream tail is corrupt",
+  "variable": "stream_tail_integrity",
+  "expected_outcome": "inspector_failed",
+  "expected_exit": 80,
+  "mutation": {
+   "op": "set_fields",
+   "selector": {
+    "event": "response_scan_terminal",
+    "request_id": "fcdd4af3-2a17-4bee-86e4-55296a51d01e"
+   },
+   "changes": {
+    "outcome": {"from": "ok", "to": "failed"},
+    "reason_code": {"from": null, "to": "truncated_stream"}
+   }
+  }
+ },
+ {
+  "id": "causal_evidence_absent",
+  "label": "scans ok but causal events missing",
+  "variable": "causal_tool_evidence",
+  "expected_outcome": "obligation_failed",
+  "expected_exit": 84,
+  "mutation": {
+   "op": "remove_events",
+   "events": {
+    "tool_use_seen": 1,
+    "tool_result_seen": 1
+   }
+  }
+ },
+ {
+  "id": "upstream_non_2xx",
+  "label": "upstream non-2xx",
+  "variable": "upstream_status",
+  "expected_outcome": "postcondition_failed",
+  "expected_exit": 86,
+  "mutation": {
+   "op": "set_fields",
+   "selector": {
+    "event": "request",
+    "request_id": "37fb8ead-1477-4c2d-a6d6-03faaf83632f"
+   },
+   "changes": {
+    "upstream_status": {"from": 200, "to": 500}
+   }
+  }
+ }
+]

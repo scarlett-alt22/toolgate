@@ -1,0 +1,15 @@
+{
+ "is_error": false,
+ "duration_api_ms": 44,
+ "num_turns": 2,
+ "stop_reason": "end_turn",
+ "session_id": "16ebbddc-fc17-4067-9b69-592993a1a5a0",
+ "total_cost_usd": 0.000017999999999999997,
+ "permission_denials": [],
+ "terminal_reason": "completed",
+ "subtype": "success",
+ "api_error_status": null,
+ "result": "CHAL-a31e82c9acc743968b9bd852287ec123\n{\"ok\": true, \"read\": \"CHAL-a31e82c9acc743968b9bd852287ec123\"}",
+ "type": "result"
+}
+

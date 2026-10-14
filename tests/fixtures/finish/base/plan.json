@@ -1,0 +1,39 @@
+{
+ "attempt_id": "a4e51732-1f6f-4345-87d5-2a836bfe694d",
+ "profile_id": "read-shadow-loopback",
+ "workspace": "/opt/tool-definition-gate/workspace",
+ "home": "/opt/tool-definition-gate/hb-home",
+ "challenge": "CHAL-a31e82c9acc743968b9bd852287ec123",
+ "capability_path": "e7d0e031cf3e60d8a6e56f3faf5c1882",
+ "model": "claude-haiku-4-5-20251001",
+ "timeout_seconds": 120,
+ "upstream_origin": "http://127.0.0.1:53127",
+ "auth_mode": "loopback_dummy",
+ "required_actions": [
+  {
+   "id": "sentinel_read",
+   "tool": "Read",
+   "path": "/opt/tool-definition-gate/runs/a4e51732-1f6f-4345-87d5-2a836bfe694d/input/sentinel.txt",
+   "min_success": 1
+  }
+ ],
+ "output_schema_sha256": "aa3150c0d5aea20bc56fd1b165fe00eac767b77fd741200c759b3b7a239f1de5",
+ "hashes": {
+  "profile": "e43b15c8388570fd2482f23c30cb955018efb7835bd41bdc5d1792f7cc3a56ac",
+  "settings": "4e33830b42dc3c8b068d002ea16008900a79f33022f5214f77344982f3ac1f7d",
+  "mcp": "691f62624936af38f0e6b2ac6c8b43162a23696696f62d5037d9eb2b43bd73c5",
+  "sentinel": "7a3f78addb5adb898f5dc54d0300271a153414cd9b2bcef824865b3974ff2d1d",
+  "policy": "033da94d2926811aa5838e1eeffd624f0ce7706a80c8ca75a99f32df7c4482e6",
+  "cli": "013a1cf17df5ff1dcc189d5d6fd3fdd5f097ddc3cd41aa9992e99805574febbe",
+  "output_schema": "aa3150c0d5aea20bc56fd1b165fe00eac767b77fd741200c759b3b7a239f1de5"
+ },
+ "state_before": {},
+ "ambient_overrides_cleared": [],
+ "keychain_bridge": {
+  "mode": "loopback_dummy",
+  "link_must_not_exist": "/opt/tool-definition-gate/hb-home/Library/Keychains",
+  "content_hash_checked": false,
+  "topology_ok": true
+ }
+}
+

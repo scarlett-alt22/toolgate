@@ -1,0 +1,37 @@
+{
+ "schema_version": 2,
+ "branch": "example_fake_cli",
+ "baseline_path": "tests/baselines/example-fake-read.json",
+ "captured_at": "2026-08-15",
+ "review_status": "CANDIDATE",
+ "review_note": "🔴 This is an **example** baseline, pinning the Read definition from this repo's own tests/fake_cli.py — it is this repo's own code, and anyone who clones it can reproduce this hash byte-for-byte.\n\nIt is **not** any real vendor CLI's definition. To gate a real CLI with this, capture one against your own binary with tests/capture_tool_baseline.py, then review every field **yourself** before flipping review_status to REVIEWED — only a human can do that step, so this repo does not require it to be REVIEWED, only that this status be read aloud on every run.\n\nWhy no real-CLI baseline ships with the package: ① that would redistribute the vendor's definition text; ② baselines are version-bound — someone else's CLI version differs from yours, and shipping one would only lead them to trust a value that is invalid for them.",
+ "canonical_sha256_inspector": "1082e9bf245ffd628cef9da884502a136f57429fd0e20b965a4f244cd18ed083",
+ "canonical_sha256_ensure_ascii_false": "1082e9bf245ffd628cef9da884502a136f57429fd0e20b965a4f244cd18ed083",
+ "canonical_note": "The authoritative field is canonical_sha256_inspector: calls inspector.canon_tool directly (UTF-8, ensure_ascii=false).",
+ "definition": {
+  "name": "Read",
+  "description": "Read a file from the local filesystem.",
+  "input_schema": {
+   "type": "object",
+   "properties": {
+    "file_path": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "file_path"
+   ]
+  }
+ },
+ "fields": [
+  "description",
+  "input_schema",
+  "name"
+ ],
+ "measured": {
+  "source": "tests/fake_cli.py READ_TOOL (in this repo)"
+ },
+ "unmeasured": {
+  "vendor_cli": "unmeasured — this example never touches any real vendor CLI"
+ }
+}

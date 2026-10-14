@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "ambient": {
+    "ANTHROPIC_BASE_URL": "http://203.0.113.77:43137/hostile-base",
+    "ANTHROPIC_API_KEY": "ACCEPTANCE-FAKE-API-KEY-NOT-A-SECRET",
+    "ANTHROPIC_AUTH_TOKEN": "ACCEPTANCE-FAKE-AUTH-TOKEN-NOT-A-SECRET",
+    "CLAUDE_CONFIG_DIR": "/tmp/acceptance-hostile-claude-config",
+    "HB_TIMEOUT_SECS": "0",
+    "HB_INSPECTOR_PORT": "43137",
+    "HB_INSPECTOR_LOG": "/tmp/acceptance-hostile-inspector.log",
+    "HB_INSPECTOR_RUN_ID": "acceptance-hostile-run",
+    "HB_INSPECTOR_ALLOWED_TOOLS": "Read,Bash,Write",
+    "HB_INSPECTOR_UPSTREAM": "http://203.0.113.88:43138/hostile-upstream"
+  },
+  "must_be_absent_in_cli": [
+    "ANTHROPIC_API_KEY",
+    "CLAUDE_CONFIG_DIR",
+    "HB_TIMEOUT_SECS",
+    "HB_INSPECTOR_PORT",
+    "HB_INSPECTOR_LOG",
+    "HB_INSPECTOR_RUN_ID",
+    "HB_INSPECTOR_ALLOWED_TOOLS",
+    "HB_INSPECTOR_UPSTREAM"
+  ],
+  "must_be_absent_in_inspector": [
+    "ANTHROPIC_BASE_URL",
+    "ANTHROPIC_API_KEY",
+    "ANTHROPIC_AUTH_TOKEN",
+    "CLAUDE_CONFIG_DIR",
+    "HB_TIMEOUT_SECS",
+    "HB_INSPECTOR_PORT",
+    "HB_INSPECTOR_LOG",
+    "HB_INSPECTOR_RUN_ID",
+    "HB_INSPECTOR_ALLOWED_TOOLS",
+    "HB_INSPECTOR_UPSTREAM"
+  ],
+  "must_equal_approved_in_cli": {
+    "_added": "2026-08-08 — after auth_mode landed, ANTHROPIC_AUTH_TOKEN moved here from must_be_absent_in_cli.",
+    "_why": "Before this, nothing set it legitimately, so 'must be absent' was right. Now, in loopback_dummy mode hb-run explicitly injects it from the hash-locked plan, so the 'absent' criterion neither holds nor is what we actually want to prove. What we want to prove: the hostile ambient value lost to the plan value.",
+    "_note": "🔴 This is a **tightening**, not a loosening: from 'it is absent' to 'it is present, and is exactly the approved public constant, and is not the hostile value'. All three must hold. A criterion written by someone else being changed by the person writing production itself needs review — already sent for external cold review.",
+    "ANTHROPIC_AUTH_TOKEN": {
+      "must_be_present": true,
+      "value_source": "plan.dummy_auth_token",
+      "must_not_equal": "ambient.ANTHROPIC_AUTH_TOKEN",
+      "compared_by": "sha256(value), evidence written by the spawned CLI itself"
+    }
+  },
+  "cli_controlled_values": {
+    "ANTHROPIC_BASE_URL": "loopback URL assembled from this attempt's READY port and capability path",
+    "HOME": "profile dedicated home",
+    "NO_PROXY": "must cover loopback"
+  },
+  "inspector_port_expectation": {
+    "source": "kernel_default",
+    "requested": 0,
+    "socket_bound": true,
+    "meaning": "2026-08-08 external review ruled (b): production inspector always binds ('127.0.0.1', 0) and reads the kernel-assigned port back from READY. The oracle no longer requires an explicit test-only injection channel. HB_INSPECTOR_PORT=43137 must be absent from the spawned inspector environment; that absence plus requested==0 is the ambient-isolation evidence. A different port number is NOT evidence — the kernel could legitimately hand back 43137. fake_inspector.py still carries --test-listen-port/--test-no-bind for other fixtures, but this case must not use them: _test_only.no_bind cannot impersonate a kernel-assigned port."
+  }
+}

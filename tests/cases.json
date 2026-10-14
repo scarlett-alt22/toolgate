@@ -1,0 +1,782 @@
+{
+ "_source": "inspector-review2-20260807.md §mock-only acceptance that must be all green (lines 339–381)",
+ "_discipline": [
+  "Every case carries a spec_line: which line of the spec text demands it. Changing a verdict criterion = changing this file, visible in the diff.",
+  "Deleting cases or loosening expected during implementation is forbidden. Any change must first amend the spec or state its reason, backstopped by verify_acceptance.py's roster-completeness check.",
+  "expected is copied from the spec text, not reverse-engineered from the current implementation's behavior."
+ ],
+ "_expected_vocab": {
+  "rc78": "preflight rejects, exit 78, model process never starts",
+  "forward": "inspector forwards to the mock upstream",
+  "block403": "inspector blocks before forwarding, returns 403, upstream request delta is 0",
+  "success": "terminal outcome=success",
+  "obligation_failed": "upper bound all passed but an attempt-level required action was not done",
+  "policy_blocked": "a request was blocked, terminal must be policy_blocked, must not be overwritten to cli_failed by a nonzero CLI exit",
+  "not_success": "spec only requires \"not success\", no specific outcome"
+ },
+ "groups": [
+  {
+   "id": "preflight",
+   "title": "Preflight / zero requests",
+   "spec_lines": "350-357",
+   "invariant_every_case": {
+    "attempted_count": 1,
+    "mock_request_delta": 0,
+    "note": "spec:357 every case has one attempted, one finished(config_rejected), mock request delta 0",
+    "_refinement_20260808": {
+     "why": "The spec text's finished carries the (config_rejected) qualifier — it means **the cases that were rejected**. pf-valid is the only case in this group that is not rejected; after preflight passes the attempt must keep running, so there must be no finished at this point — demanding finished(config_rejected) of it would contradict the spec.",
+     "so": "Cases with expected=rc78: 1 attempted + 1 finished + outcome=config_rejected; cases with expected=pass: 1 attempted + rc0 + no finished at this point (left for later phases to write).",
+     "guard": "This is a criterion fork, not a loosening. It is written here so it shows up in the diff — criterion changes must be visible, not quietly tweaked during implementation."
+    }
+   },
+   "cases": [
+    {
+     "id": "pf-valid",
+     "spec_line": 352,
+     "expected": "pass",
+     "desc": "valid profile passes"
+    },
+    {
+     "id": "pf-missing-sandbox",
+     "spec_line": "TASK-A14#5",
+     "expected": "rc78",
+     "expected_error_type": "sandbox_missing",
+     "desc": "missing required sandbox field: closed schema rejects"
+    },
+    {
+     "id": "pf-sandbox-invalid",
+     "spec_line": "TASK-A14#5",
+     "expected": "rc78",
+     "expected_error_type": "sandbox_mode_invalid",
+     "desc": "sandbox not the required/disabled literal: reject"
+    },
+    {
+     "id": "pf-real-disabled",
+     "spec_line": "TASK-A14#5",
+     "expected": "rc78",
+     "expected_error_type": "sandbox_downgrade_rejected",
+     "desc": "real_keychain_bridge + disabled: unconditional reject"
+    },
+    {
+     "id": "pf-real-cli-dummy-disabled",
+     "spec_line": "TASK-A14#5",
+     "expected": "rc78",
+     "expected_error_type": "sandbox_disabled_cli_mismatch",
+     "desc": "real CLI + loopback_dummy + disabled: identity does not match the test-build exact fake CLI"
+    },
+    {
+     "id": "pf-bad-json",
+     "spec_line": 352,
+     "expected": "rc78",
+     "desc": "profile is malformed JSON"
+    },
+    {
+     "id": "pf-root-type",
+     "spec_line": 352,
+     "expected": "rc78",
+     "desc": "profile root is not an object"
+    },
+    {
+     "id": "pf-missing-key",
+     "spec_line": 352,
+     "expected": "rc78",
+     "desc": "missing required field"
+    },
+    {
+     "id": "pf-unknown-key",
+     "spec_line": 352,
+     "expected": "rc78",
+     "desc": "extra unknown field (closed schema)"
+    },
+    {
+     "id": "pf-wrong-type",
+     "spec_line": 352,
+     "expected": "rc78",
+     "desc": "field has wrong type"
+    },
+    {
+     "id": "pf-illegal-mode",
+     "spec_line": 352,
+     "expected": "rc78",
+     "desc": "defaultMode is not the dontAsk literal"
+    },
+    {
+     "id": "pf-blank-array-elem",
+     "spec_line": 352,
+     "expected": "rc78",
+     "desc": "allow/deny array contains a blank string"
+    },
+    {
+     "id": "pf-dup-array-elem",
+     "spec_line": 352,
+     "expected": "rc78",
+     "desc": "allow/deny array has duplicates"
+    },
+    {
+     "id": "pf-empty-array",
+     "spec_line": 352,
+     "expected": "rc78",
+     "desc": "allow/deny is an empty array"
+    },
+    {
+     "id": "pf-tool-missing",
+     "spec_line": 353,
+     "expected": "rc78",
+     "desc": "approved_tools missing Read"
+    },
+    {
+     "id": "pf-tool-dup",
+     "spec_line": 353,
+     "expected": "rc78",
+     "desc": "approved_tools has duplicates"
+    },
+    {
+     "id": "pf-tool-not-string",
+     "spec_line": 353,
+     "expected": "rc78",
+     "desc": "approved tool name is not a string"
+    },
+    {
+     "id": "pf-model-wrong-type",
+     "spec_line": 353,
+     "expected": "rc78",
+     "desc": "model has wrong type"
+    },
+    {
+     "id": "pf-timeout-zero",
+     "spec_line": 353,
+     "expected": "rc78",
+     "desc": "timeout=0"
+    },
+    {
+     "id": "pf-timeout-negative",
+     "spec_line": 353,
+     "expected": "rc78",
+     "desc": "timeout is negative"
+    },
+    {
+     "id": "pf-timeout-over",
+     "spec_line": 353,
+     "expected": "rc78",
+     "desc": "timeout>300"
+    },
+    {
+     "id": "pf-budget-wrong-type",
+     "spec_line": 353,
+     "expected": "rc78",
+     "desc": "max_budget_usd has wrong type"
+    },
+    {
+     "id": "pf-rule-single-slash",
+     "spec_line": 354,
+     "expected": "rc78",
+     "desc": "Read(/abs/**) single slash"
+    },
+    {
+     "id": "pf-rule-read-star",
+     "spec_line": 354,
+     "expected": "rc78",
+     "desc": "Read(*) too broad"
+    },
+    {
+     "id": "pf-rule-relative",
+     "spec_line": 354,
+     "expected": "rc78",
+     "desc": "relative-path rule"
+    },
+    {
+     "id": "pf-rule-dotdot",
+     "spec_line": 354,
+     "expected": "rc78",
+     "desc": "rule contains .."
+    },
+    {
+     "id": "pf-rule-var-residue",
+     "spec_line": 354,
+     "expected": "rc78",
+     "desc": "rule has leftover $ / ~ / <...>"
+    },
+    {
+     "id": "pf-rule-malformed",
+     "spec_line": 354,
+     "expected": "rc78",
+     "desc": "malformed rule (unclosed parens etc.)"
+    },
+    {
+     "id": "pf-rule-unknown-tool",
+     "spec_line": 354,
+     "expected": "rc78",
+     "desc": "rule points at an unknown tool"
+    },
+    {
+     "id": "pf-rule-too-broad-glob",
+     "spec_line": 354,
+     "expected": "rc78",
+     "desc": "overly broad glob (beyond this round's input)"
+    },
+    {
+     "id": "pf-profile-symlink",
+     "spec_line": 355,
+     "expected": "rc78",
+     "desc": "profile is a symlink"
+    },
+    {
+     "id": "pf-settings-symlink",
+     "spec_line": 355,
+     "expected": "rc78",
+     "desc": "settings snapshot is a symlink"
+    },
+    {
+     "id": "pf-mcp-symlink",
+     "spec_line": 355,
+     "expected": "rc78",
+     "desc": "MCP snapshot is a symlink"
+    },
+    {
+     "id": "pf-sentinel-symlink",
+     "spec_line": 355,
+     "expected": "rc78",
+     "desc": "sentinel is a symlink"
+    },
+    {
+     "id": "pf-fifo",
+     "spec_line": 355,
+     "expected": "rc78",
+     "desc": "input is a FIFO"
+    },
+    {
+     "id": "pf-devfd",
+     "spec_line": 355,
+     "expected": "rc78",
+     "desc": "input comes via /dev/fd"
+    },
+    {
+     "id": "pf-not-regular",
+     "spec_line": 355,
+     "expected": "rc78",
+     "desc": "not a regular file (directory/device)"
+    },
+    {
+     "id": "pf-not-canonical",
+     "spec_line": 355,
+     "expected": "rc78",
+     "desc": "path is not canonical"
+    },
+    {
+     "id": "pf-workspace-eq-home",
+     "spec_line": 356,
+     "expected": "rc78",
+     "desc": "workspace equals home"
+    },
+    {
+     "id": "pf-home-uncontrolled",
+     "spec_line": 356,
+     "expected": "rc78",
+     "desc": "HOME uncontrolled / lands in the real user's home directory"
+    },
+    {
+     "id": "pf-cli-realpath-drift",
+     "spec_line": 356,
+     "expected": "rc78",
+     "desc": "CLI realpath drift"
+    },
+    {
+     "id": "pf-cli-hash-drift",
+     "spec_line": 356,
+     "expected": "rc78",
+     "desc": "CLI sha256 drift"
+    },
+    {
+     "id": "pf-cli-version-drift",
+     "spec_line": 356,
+     "expected": "rc78",
+     "desc": "CLI version drift"
+    },
+    {
+     "id": "pf-settings-toctou",
+     "spec_line": 356,
+     "expected": "rc78",
+     "desc": "settings changed around spawn (TOCTOU)",
+     "artifacts_expected_to_drift": [
+      "settings"
+     ],
+     "_why": "This case's essence is swapping **this one** object after preflight records the hash. ★2026-08-09 external review A11: the first version wrote it as a bool (any drift counts as pass) — **that was fail-open** — CLI-only drift would pass, drift entirely outside the target would pass, and a missing/non-regular object was counted as a successful injection; plus the early return skipped the whole wrapper-source check. Now: the actual drift set must be **strictly equal** to this field."
+    },
+    {
+     "id": "pf-mcp-toctou",
+     "spec_line": 356,
+     "expected": "rc78",
+     "desc": "MCP snapshot changed (TOCTOU)",
+     "artifacts_expected_to_drift": [
+      "mcp"
+     ],
+     "_why": "This case's essence is swapping **this one** object after preflight records the hash. ★2026-08-09 external review A11: the first version wrote it as a bool (any drift counts as pass) — **that was fail-open** — CLI-only drift would pass, drift entirely outside the target would pass, and a missing/non-regular object was counted as a successful injection; plus the early return skipped the whole wrapper-source check. Now: the actual drift set must be **strictly equal** to this field."
+    },
+    {
+     "id": "pf-ambient-override",
+     "spec_line": 267,
+     "expected": "pass",
+     "desc": "HB_INSPECTOR_*/ANTHROPIC_BASE_URL/CLAUDE_CONFIG_DIR pre-seeded in the environment must be cleared, and terminal must record ambient_overrides_cleared"
+    },
+    {
+     "id": "pf-dummy-origin-userinfo",
+     "spec_line": 6518,
+     "expected": "rc78",
+     "desc": "loopback_dummy + upstream_origin=http://127.0.0.1@192.0.2.1:9 (127.0.0.1 is userinfo, the real host is 192.0.2.1); field-for-field identical to the positive case except origin; must 78 before CLI spawn"
+    },
+    {
+     "id": "pf-dummy-home-has-keychains",
+     "spec_line": 6438,
+     "expected": "rc78",
+     "desc": "loopback_dummy but Library/Keychains already exists in the dedicated home (absolute symlink pointing at a harness-owned synthetic directory); mere existence must reject, and it must not be followed/repaired/deleted"
+    }
+   ]
+  },
+  {
+   "id": "upper_bound",
+   "title": "Inspector upper bound (per-request \"no overreach\")",
+   "spec_lines": "359-365",
+   "cases": [
+    {
+     "id": "ub-empty-tools",
+     "spec_line": 361,
+     "expected": "forward",
+     "desc": "tools=[] should forward"
+    },
+    {
+     "id": "ub-read-correct-hash",
+     "spec_line": 361,
+     "expected": "forward",
+     "desc": "[Read] with correct full-definition should forward"
+    },
+    {
+     "id": "ub-extra-bash",
+     "spec_line": 362,
+     "expected": "block403",
+     "desc": "extra advertised Bash"
+    },
+    {
+     "id": "ub-extra-write",
+     "spec_line": 362,
+     "expected": "block403",
+     "desc": "extra advertised Write"
+    },
+    {
+     "id": "ub-duplicate-read",
+     "spec_line": 362,
+     "expected": "block403",
+     "desc": "duplicate Read"
+    },
+    {
+     "id": "ub-same-name-diff-schema",
+     "spec_line": 362,
+     "expected": "block403",
+     "desc": "same-name Read but definition hash mismatch"
+    },
+    {
+     "id": "ub-missing-tools-field",
+     "spec_line": 362,
+     "expected": "block403",
+     "desc": "body missing tools field"
+    },
+    {
+     "id": "ub-tools-not-array",
+     "spec_line": 362,
+     "expected": "block403",
+     "desc": "tools is not an array"
+    },
+    {
+     "id": "ub-tool-elem-not-object",
+     "spec_line": 362,
+     "expected": "block403",
+     "desc": "tools element is not an object"
+    },
+    {
+     "id": "ub-name-absent",
+     "spec_line": 362,
+     "expected": "block403",
+     "desc": "tool missing name"
+    },
+    {
+     "id": "ub-name-empty",
+     "spec_line": 362,
+     "expected": "block403",
+     "desc": "tool name is an empty string"
+    },
+    {
+     "id": "ub-name-not-string",
+     "spec_line": 362,
+     "expected": "block403",
+     "desc": "tool name is not a string"
+    },
+    {
+     "id": "ub-body-bad-json",
+     "spec_line": 362,
+     "expected": "block403",
+     "desc": "malformed body JSON (malformed must not fail-open)"
+    },
+    {
+     "id": "ub-body-root-array",
+     "spec_line": 362,
+     "expected": "block403",
+     "desc": "body root is an array"
+    },
+    {
+     "id": "ub-json-duplicate-tools-key",
+     "spec_line": 76,
+     "expected": "block403",
+     "desc": "strict JSON: duplicate tools key (first value contains Bash, last value empty) must be rejected before forwarding; upstream delta 0"
+    },
+    {
+     "id": "ub-json-nan",
+     "spec_line": 76,
+     "expected": "block403",
+     "desc": "strict JSON: NaN, accepted by Python by default, must be rejected; upstream delta 0"
+    },
+    {
+     "id": "ub-json-infinity",
+     "spec_line": 76,
+     "expected": "block403",
+     "desc": "strict JSON: Infinity, accepted by Python by default, must be rejected; upstream delta 0"
+    },
+    {
+     "id": "ub-json-nested-duplicate-key",
+     "spec_line": 76,
+     "expected": "block403",
+     "desc": "strict JSON: duplicate keys in nested objects must also be rejected; upstream delta 0"
+    },
+    {
+     "id": "ub-stream-not-bool",
+     "spec_line": 362,
+     "expected": "block403",
+     "desc": "stream is the string \"true\", not a bool: the scanner relies on it to decide whether to read the response as SSE or JSON; a request that cannot be judged must be rejected before forwarding (regression case called out by name in A8 §3)"
+    },
+    {
+     "id": "ub-stream-null",
+     "spec_line": 362,
+     "expected": "block403",
+     "desc": "stream is null: same as above, null is not a bool"
+    },
+    {
+     "id": "ub-body-oversize",
+     "spec_line": 284,
+     "expected": "block403",
+     "desc": "body exceeds max_body_bytes"
+    },
+    {
+     "id": "ub-wrong-method",
+     "spec_line": 363,
+     "expected": "block403",
+     "desc": "wrong method"
+    },
+    {
+     "id": "ub-wrong-path",
+     "spec_line": 363,
+     "expected": "block403",
+     "desc": "wrong path"
+    },
+    {
+     "id": "ub-wrong-query",
+     "spec_line": 363,
+     "expected": "block403",
+     "desc": "wrong query"
+    },
+    {
+     "id": "ub-wrong-model",
+     "spec_line": 363,
+     "expected": "block403",
+     "desc": "wrong model"
+    },
+    {
+     "id": "ub-wrong-capability-path",
+     "spec_line": 363,
+     "expected": "block403",
+     "desc": "wrong capability path prefix"
+    },
+    {
+     "id": "ub-redirect-302",
+     "spec_line": 364,
+     "expected": "not_success",
+     "desc": "upstream 302 to a second origin: second-origin request count must be 0, auth headers must not leak, all 3xx recorded as upstream error and never followed",
+     "extra_assert": [
+      "second_origin_requests==0",
+      "no_auth_header_in_logs",
+      "no_redirect_followed"
+     ]
+    },
+    {
+     "id": "ub-inspector-dies",
+     "spec_line": 365,
+     "expected": "not_success",
+     "desc": "inspector dies after READY"
+    },
+    {
+     "id": "ub-log-truncated",
+     "spec_line": 365,
+     "expected": "not_success",
+     "desc": "inspector log truncated"
+    },
+    {
+     "id": "ub-response-incomplete",
+     "spec_line": 365,
+     "expected": "not_success",
+     "desc": "upstream response incomplete"
+    },
+    {
+     "id": "ub-decoy-authorization",
+     "spec_line": 6537,
+     "expected": "block403",
+     "desc": "origin legal, preflight all passed, the same pinned fake CLI only swaps the outbound Authorization for a public decoy; only the inspector's credential gate should stop it, upstream delta must be 0"
+    }
+   ]
+  },
+  {
+   "id": "lower_bound",
+   "title": "Attempt lower bound (whole round: 'what had to be done was done and the result stands')",
+   "spec_lines": "367-373",
+   "cases": [
+    {
+     "id": "lb-happy",
+     "spec_line": 369,
+     "expected": "success",
+     "desc": "[] -> [Read] -> [] + correct tool_use/result/challenge/postconditions"
+    },
+    {
+     "id": "lb-subset-no-tooluse",
+     "spec_line": 370,
+     "expected": "obligation_failed",
+     "desc": "all requests are approved subsets, but the round has no Read tool_use at all"
+    },
+    {
+     "id": "lb-challenge-no-tooluse",
+     "spec_line": 371,
+     "expected": "not_success",
+     "desc": "challenge is a fixed/copied value, no real tool_use"
+    },
+    {
+     "id": "lb-read-wrong-path",
+     "spec_line": 372,
+     "expected": "not_success",
+     "desc": "Read did not read this round's sentinel path"
+    },
+    {
+     "id": "lb-result-id-mismatch",
+     "spec_line": 372,
+     "expected": "not_success",
+     "desc": "tool_result's tool_use_id does not match"
+    },
+    {
+     "id": "lb-result-is-error",
+     "spec_line": 372,
+     "expected": "not_success",
+     "desc": "tool_result is_error=true"
+    },
+    {
+     "id": "lb-result-no-challenge",
+     "spec_line": 372,
+     "expected": "not_success",
+     "desc": "tool_result content lacks this round's challenge"
+    },
+    {
+     "id": "lb-permission-denial",
+     "spec_line": 372,
+     "expected": "not_success",
+     "desc": "a permission denial occurred this round"
+    },
+    {
+     "id": "lb-challenge-not-first",
+     "spec_line": 373,
+     "expected": "not_success",
+     "desc": "challenge is not on the first output line"
+    },
+    {
+     "id": "lb-final-json-bad",
+     "spec_line": 373,
+     "expected": "not_success",
+     "desc": "final JSON does not match output_schema_sha256"
+    },
+    {
+     "id": "lb-postcondition-false",
+     "spec_line": 373,
+     "expected": "not_success",
+     "desc": "some independent postcondition is false"
+    }
+   ]
+  },
+  {
+   "id": "terminal",
+   "title": "Terminal / concurrency / state invariance",
+   "spec_lines": "375-381",
+   "cases": [
+    {
+     "id": "tm-blocked-wins",
+     "spec_line": 377,
+     "expected": "policy_blocked",
+     "desc": "extra tool blocked before forwarding; even if the fake CLI exits nonzero on the 403, terminal must be policy_blocked, not overwritten to cli_failed"
+    },
+    {
+     "id": "tm-concurrency-20",
+     "spec_line": 378,
+     "expected": "pass",
+     "desc": "20 same-second concurrent attempts: dirs and attempt_ids all unique, logs never interleave",
+     "extra_assert": [
+      "unique_attempt_dirs==20",
+      "unique_attempt_ids==20",
+      "no_interleaved_log_lines"
+     ]
+    },
+    {
+     "id": "tm-finished-normal",
+     "spec_line": 379,
+     "expected": "pass",
+     "desc": "normal attempt has exactly one finished"
+    },
+    {
+     "id": "tm-finished-configfail",
+     "spec_line": 379,
+     "expected": "pass",
+     "desc": "config-failed attempt has exactly one finished"
+    },
+    {
+     "id": "tm-finished-clifail",
+     "spec_line": 379,
+     "expected": "pass",
+     "desc": "CLI-failed attempt has exactly one finished"
+    },
+    {
+     "id": "tm-finished-timeout",
+     "spec_line": 379,
+     "expected": "pass",
+     "desc": "timeout attempt has exactly one finished"
+    },
+    {
+     "id": "tm-finished-sigint",
+     "spec_line": 379,
+     "expected": "pass",
+     "desc": "INT attempt has exactly one finished"
+    },
+    {
+     "id": "tm-finished-sigterm",
+     "spec_line": 379,
+     "expected": "pass",
+     "desc": "TERM attempt has exactly one finished"
+    },
+    {
+     "id": "tm-abandoned-recovery",
+     "spec_line": 310,
+     "expected": "pass",
+     "desc": "open attempt left behind by SIGKILL: on next startup it is completed to exactly one abandoned under an exclusive lock, never silently left as attempted"
+    },
+    {
+     "id": "tm-log-hash-stable",
+     "spec_line": 380,
+     "expected": "pass",
+     "desc": "log hash stable after the inspector stops and is waited on"
+    },
+    {
+     "id": "tm-fields-complete",
+     "spec_line": 380,
+     "expected": "pass",
+     "desc": "terminal fields of the success record complete (against the full spec:312-324 table)"
+    },
+    {
+     "id": "tm-state-invariants",
+     "spec_line": 381,
+     "expected": "pass",
+     "desc": "six legacy states + Room snapshot unchanged before and after",
+     "targets": [
+      "~/.claude-heartbeat-log.jsonl",
+      "~/.claude-heartbeat-armed.json",
+      "~/.claude-heartbeat-armed-events.jsonl",
+      "~/.claude-nudge-state.json",
+      "~/.claude-heartbeat-items.json",
+      "heartbeat_room_snapshot"
+     ],
+     "blocked_note": "spec:337 Room id must not be guessed; before phase 1, if this cell cannot obtain a trusted room id, it must explicitly record unmeasured rather than pass"
+    }
+   ]
+  },
+  {
+   "id": "auth_phase_drift",
+   "title": "dummy Keychains phase drift (absence rechecks across three phases)",
+   "spec_lines": "REPORT-A5:6442 / A6b §4",
+   "_added": "2026-08-09: A6b wrote the definition, A8 judged it 'not done — static definition only'. This group is the executor for those two.",
+   "cases": [
+    {
+     "id": "auth-dummy-keychains-drift-before-cli-spawn",
+     "spec_line": 6442,
+     "spec_source": "REPORT-A5.md",
+     "expected": "config_rejected",
+     "desc": "In loopback_dummy's initial dedicated HOME, Library/Keychains does not exist; the pre_inspector absence recheck passes first. After the trusted fake inspector is spawned and before it prints READY, an absolute symlink pointing at the synthetic Keychains directory inside the marked fixture root is created at that location, leaving exclusive mutation evidence with its own pid/writer hash; hb-run's pre_cli recheck after receiving READY must catch that object, reject, and never spawn the CLI.",
+     "extra_assert": [
+      "lstat(home+'/Library/Keychains').initial.type=='absent'",
+      "phase.pre_inspector.result=='pass'",
+      "mutation_evidence.actor=='fake_inspector'",
+      "mutation_evidence.pid==inspector_process_evidence.pid",
+      "mutation_evidence.writer_sha256==fixture_sha256.fake_inspector",
+      "mutation_evidence.completed_after_inspector_entry==true",
+      "mutation_evidence.completed_before_ready==true",
+      "lstat(home+'/Library/Keychains').after_mutation.type=='symlink'",
+      "readlink(home+'/Library/Keychains').is_absolute==true",
+      "symlink_target_is_inside_marked_fixture_root==true",
+      "inspector_ready_count==1",
+      "phase.pre_cli.result=='reject'",
+      "wrapper_exit_code==78",
+      "cli_marker_count==0",
+      "mock_request_delta==0",
+      "attempted_count==1",
+      "finished_count==1",
+      "finished.outcome=='config_rejected'",
+      "keychains_lstat_and_readlink_after==after_mutation"
+     ],
+     "failure_means": "Red means dummy absence was only checked once at pre_inspector with no recheck before CLI spawn after READY; or the CLI was still started / requests still made after drift was found; or the failure path deleted or replaced the synthetic Keychains symlink on its own."
+    },
+    {
+     "id": "auth-dummy-keychains-drift-after-cli-spawn",
+     "spec_line": 6442,
+     "spec_source": "REPORT-A5.md",
+     "expected": "config_rejected",
+     "desc": "loopback_dummy's pre_inspector and pre_cli absence rechecks both pass and the trusted fake CLI has been spawned. The executor first runs an isomorphic no-drift positive control separately and requires terminal=success, then lets the mutant arm run the same three-request protocol; only after the protocol/CLI outputs have all landed on disk does the mutant arm create the synthetic Keychains absolute symlink before exiting. post_cli must re-judge it from would-be success to config_rejected.",
+     "extra_assert": [
+      "lstat(home+'/Library/Keychains').initial.type=='absent'",
+      "phase.pre_inspector.result=='pass'",
+      "inspector_ready_count==1",
+      "phase.pre_cli.result=='pass'",
+      "cli_marker_count==1",
+      "mutation_evidence.actor=='fake_cli'",
+      "mutation_evidence.pid==cli_process_evidence.pid",
+      "mutation_evidence.writer_sha256==fixture_sha256.fake_cli",
+      "mutation_evidence.completed_after_cli_entry==true",
+      "mutation_evidence.completed_before_cli_exit==true",
+      "positive_control.finished.outcome=='success'",
+      "positive_control.mock_request_delta==3",
+      "mutant.mock_request_delta==3",
+      "positive_control.request_and_scan_artifacts==mutant.request_and_scan_artifacts",
+      "mutation_file.mtime_ns>=model_json.mtime_ns",
+      "mutation_file.mtime_ns>=inspector_jsonl.mtime_ns",
+      "lstat(home+'/Library/Keychains').after_mutation.type=='symlink'",
+      "readlink(home+'/Library/Keychains').is_absolute==true",
+      "symlink_target_is_inside_marked_fixture_root==true",
+      "phase.post_cli.result=='reject'",
+      "wrapper_exit_code==78",
+      "attempted_count==1",
+      "finished_count==1",
+      "finished.outcome=='config_rejected'",
+      "keychains_lstat_and_readlink_after==after_mutation"
+     ],
+     "failure_means": "Red means no post_cli absence recheck ran after the CLI exited, or post_cli found the drift yet kept the original success; it can also mean the counterexample changed requests/outputs beyond the trailing symlink injection, so it never formed a narrow enough counterfactual against the positive case."
+    }
+   ]
+  }
+ ],
+ "global_asserts": {
+  "anthropic_requests_must_be_zero": {
+   "spec_line": 348,
+   "desc": "the production origin branch must never execute; exit 0 only when the output shows ANTHROPIC_REQUESTS=0 and ALL_PASS"
+  },
+  "independent_verifier": {
+   "spec_line": 392,
+   "desc": "must finally be recomputed by tests/verify_acceptance.py; the tests' self-reports are not trusted"
+  }
+ }
+}

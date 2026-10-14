@@ -1,0 +1,7 @@
+{"event": "attempted", "attempt_id": "a4e51732-1f6f-4345-87d5-2a836bfe694d", "ts": "2026-08-09T08:01:21", "requested_profile_id": "read-shadow-loopback", "pid": 67329}
+{"event": "preflight_ok", "attempt_id": "a4e51732-1f6f-4345-87d5-2a836bfe694d", "ts": "2026-08-09T08:01:22", "attempt_dir": "/opt/tool-definition-gate/runs/a4e51732-1f6f-4345-87d5-2a836bfe694d"}
+{"event": "snapshot_verified", "attempt_id": "a4e51732-1f6f-4345-87d5-2a836bfe694d", "phase": "pre_inspector", "ts": "2026-08-09T08:01:22"}
+{"event": "snapshot_verified", "attempt_id": "a4e51732-1f6f-4345-87d5-2a836bfe694d", "phase": "pre_cli", "ts": "2026-08-09T08:01:22"}
+{"event": "cli_exec_attempted", "attempt_id": "a4e51732-1f6f-4345-87d5-2a836bfe694d", "ts": "2026-08-09T08:01:22", "profile_sha256": null}
+{"event": "cli_started", "attempt_id": "a4e51732-1f6f-4345-87d5-2a836bfe694d", "ts": "2026-08-09T08:01:22", "profile_sha256": null, "inner_bootstrap_handshake": true}
+{"event": "snapshot_verified", "attempt_id": "a4e51732-1f6f-4345-87d5-2a836bfe694d", "phase": "post_cli", "ts": "2026-08-09T08:01:23"}
